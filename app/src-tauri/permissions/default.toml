@@ -1,0 +1,24 @@
+"$schema" = "../gen/schemas/acl-schema.json"
+
+# 应用自定义命令权限（Tauri v2 手动定义，供 capabilities 引用）
+# 引用时不带 identifier 前缀，直接写 allow-<命令名> 即可。
+
+[[permission]]
+identifier = "allow-read-markdown"
+description = "允许前端调用 read_markdown 命令（读取指定 markdown 文件内容）"
+commands.allow = ["read_markdown"]
+
+[[permission]]
+identifier = "allow-write-markdown"
+description = "允许前端调用 write_markdown 命令（写入内容到指定 markdown 文件）"
+commands.allow = ["write_markdown"]
+
+[[permission]]
+identifier = "allow-get-startup-file-path"
+description = "允许前端调用 get_startup_file_path 命令（获取启动参数中的 .md 文件路径）"
+commands.allow = ["get_startup_file_path"]
+
+[[permission]]
+identifier = "allow-get-app-version"
+description = "允许前端调用 get_app_version 命令（获取应用版本号）"
+commands.allow = ["get_app_version"]

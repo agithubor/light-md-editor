@@ -468,7 +468,7 @@ graph TD
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "MD Editor",
   "version": "1.0.0",
-  "identifier": "com-md-editor-app",          // capabilities 权限标识前缀用这个
+  "identifier": "com-md-editor-app",          // 应用 bundle identifier（仅用于包名/窗口标识；命令权限引用时不带此前缀）
   "build": {
     "frontendDist": "../",                      // 相对 src-tauri → app/，含 index.html/i18n.js/vendor
     "devUrl": "http://localhost:5173",
@@ -540,15 +540,15 @@ graph TD
     "core:window:default",
     "core:app:default",
     "core:webview:default",
-    // ★ 自定义命令（标识 = identifier:allow-<cmd>）
-    "com-md-editor-app:allow-read-markdown",
-    "com-md-editor-app:allow-write-markdown",
-    "com-md-editor-app:allow-get-startup-file-path"
-    // 可选："com-md-editor-app:allow-get-app-version"
+    // ★ 自定义命令（应用自身权限不带 identifier 前缀，直接 allow-<cmd>）
+    "allow-read-markdown",
+    "allow-write-markdown",
+    "allow-get-startup-file-path",
+    "allow-get-app-version"
   ]
 }
 ```
-> 若编译报“权限不存在”：Tauri 2 的 `generate_handler!` 会为 app 命令自动生成 `<identifier>:allow-<cmd>` 权限；若仍缺失，确认 `tauri.conf.json` 的 `identifier` 与 capabilities 前缀一致，并执行 `npx @tauri-apps/cli cap` 重新生成 schema。
+> 应用自身命令权限在 `capabilities` 里**不带 identifier 前缀**直接写 `allow-<cmd>`（前缀仅用于插件）。本项目在 `src-tauri/permissions/default.toml` 手动定义这 4 个权限（Tauri 2 对 app 命令的自动生成在本工程未生效，手动定义最稳妥）。
 
 ### 9.3 `src-tauri/src/main.rs`（关键骨架）
 

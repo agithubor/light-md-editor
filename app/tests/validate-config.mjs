@@ -3,9 +3,8 @@
  * Section A 配置合法性校验（可执行验证）。
  * 注意：capabilities 文件的 `identifier` 字段是「能力自身的名称」（Tauri 官方示例用
  * "main-capability"/"desktop-capability"/"my-capability"），并非应用 bundle identifier。
- * 因此「identifier 前缀必须等于 com-md-editor-app」这一判据本身是误设；正确的、有意义的
- * 一致性校验是：permissions 中 `com-md-editor-app:` 命名空间必须与 tauri.conf.json 的
- * identifier 一致。本脚本按此正确语义校验。
+ * Tauri v2 中应用自身命令权限在 capabilities 里**不带 identifier 前缀**直接引用
+ * （如 `allow-read-markdown`）；标识符前缀仅用于插件权限。本脚本按此语义校验。
  */
 import fs from 'fs';
 let pass = 0, fail = 0;
@@ -37,14 +36,15 @@ assert('cap: 合法 JSON', true, '');
 const perms = cap.permissions || [];
 assert('cap: 含 core:default', perms.includes('core:default'), '');
 assert('cap: 含 core:event:default', perms.includes('core:event:default'), '');
-assert('cap: 含 com-md-editor-app:allow-read-markdown', perms.includes('com-md-editor-app:allow-read-markdown'), '');
-assert('cap: 含 com-md-editor-app:allow-write-markdown', perms.includes('com-md-editor-app:allow-write-markdown'), '');
-assert('cap: 含 com-md-editor-app:allow-get-startup-file-path', perms.includes('com-md-editor-app:allow-get-startup-file-path'), '');
-// 正确语义：permission 命名空间前缀应等于应用 identifier
-const nsPrefix = 'com-md-editor-app:';
-const nsOk = perms.every((p) => !p.includes(':') || p.startsWith(nsPrefix) || p.startsWith('core:'));
-const nsMatches = perms.filter((p) => p.startsWith(nsPrefix)).length > 0;
-assert('cap: 自定义权限命名空间与 conf.identifier 一致 (com-md-editor-app:)', nsOk && nsMatches, JSON.stringify(perms));
+assert('cap: 含 allow-read-markdown', perms.includes('allow-read-markdown'), '');
+assert('cap: 含 allow-write-markdown', perms.includes('allow-write-markdown'), '');
+assert('cap: 含 allow-get-startup-file-path', perms.includes('allow-get-startup-file-path'), '');
+assert('cap: 含 allow-get-app-version', perms.includes('allow-get-app-version'), '');
+// 应用自身命令权限不带 identifier 前缀（Tauri v2：前缀仅用于插件）
+const appPerms = ['allow-read-markdown', 'allow-write-markdown', 'allow-get-startup-file-path', 'allow-get-app-version'];
+const appOk = appPerms.every((p) => perms.includes(p));
+const noBadPrefix = perms.every((p) => !p.startsWith('com-md-editor-app:'));
+assert('cap: 4 个应用命令权限齐全且未带 identifier 前缀', appOk && noBadPrefix, JSON.stringify(perms));
 assert('cap: identifier 为能力名(标准 "default")，非 bundle id', cap.identifier && typeof cap.identifier === 'string', cap.identifier);
 
 console.log('\n=== A RESULT: PASS=' + pass + ' FAIL=' + fail + ' ===');
