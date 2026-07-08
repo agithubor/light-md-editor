@@ -59,17 +59,6 @@ fn main() {
         }))
         .plugin(tauri_plugin_deep_link::init())
         .manage(StartupState(Mutex::new(startup_path)))
-        .setup(|app| {
-            #[cfg(desktop)]
-            {
-                let handle = app.handle().clone();
-                tauri::async_runtime::spawn(async move {
-                    // best-effort：注册 md-editor:// scheme；失败不影响 .md 双击(argv+single-instance)
-                    let _ = tauri_plugin_deep_link::register("md-editor").await;
-                });
-            }
-            Ok(())
-        })
         .invoke_handler(tauri::generate_handler![
             read_markdown,
             write_markdown,
