@@ -50,6 +50,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: md-editor-setup
-          # 产物相对 app/ 目录：app/src-tauri/target/release/bundle/nsis/MD Editor_1.0.0_x64-setup.exe
-          path: src-tauri/target/release/bundle/nsis/*.exe
+          # 注意：upload-artifact 的 path 相对仓库根目录（GITHUB_WORKSPACE），
+          # 不受 defaults.run.working-directory: app 影响，必须带上 app/ 前缀。
+          # 产物真实位置：app/src-tauri/target/release/bundle/nsis/MD Editor_1.0.0_x64-setup.exe
+          path: app/src-tauri/target/release/bundle/nsis/*.exe
           if-no-files-found: error
