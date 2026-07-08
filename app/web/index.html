@@ -3293,6 +3293,66 @@ ${'</scr' + 'ipt>'}
     editor.addEventListener('keydown', handleEditorKeydown);
     previewSource.addEventListener('keydown', handleEditorKeydown);
 
+    // ===== 内联 onclick → addEventListener（规避部分运行时对内联事件处理器的 CSP 限制）=====
+    // Tauri/WebView2 在某些组合下会拦截内联事件处理器(onclick=)，但 addEventListener 不受影响。
+    // 这里统一把 [onclick] 重写为 addEventListener，并移除原属性以避免重复触发。
+    (function bindInlineOnclick() {
+      function parseLiteral(s) {
+        s = s.trim();
+        if ((s.startsWith("'") && s.endsWith("'")) || (s.startsWith('"') && s.endsWith('"'))) return s.slice(1, -1);
+        if (s === 'true') return true;
+        if (s === 'false') return false;
+        if (s === 'null') return null;
+        if (s === 'undefined') return undefined;
+        const n = Number(s);
+        if (s !== '' && !Number.isNaN(n)) return n;
+        return s;
+      }
+      document.querySelectorAll('[onclick]').forEach((el) => {
+        const expr = el.getAttribute('onclick');
+        el.removeAttribute('onclick');
+        const calls = expr.split(';').map((x) => x.trim()).filter(Boolean);
+        el.addEventListener('click', () => {
+          for (const call of calls) {
+            const m = call.match(/^([A-Za-z_$][\w$]*)\s*\((.*)\)$/);
+            if (!m) continue;
+            const fn = window[m[1]];
+            if (typeof fn !== 'function') { console.warn('[onclick] 未找到处理函数:', m[1]); continue; }
+            const argStr = m[2].trim();
+            const args = argStr ? argStr.split(',').map((a) => parseLiteral(a)) : [];
+            fn.apply(null, args);
+          }
+        });
+      });
+    })();
+
+    // ===== 弹窗：点遮罩（非内容区）关闭 + Esc 关闭最上层（额外兜底，提升体验）=====
+    const MODAL_CLOSE = {
+      'help-modal': closeHelp,
+      'url-modal': closeUrlModal,
+      'find-modal': closeFindModal,
+      'image-modal': closeImageModal,
+      'mermaid-modal': closeMermaidModal,
+      'export-image-modal': closeExportImageModal,
+    };
+    Object.keys(MODAL_CLOSE).forEach((id) => {
+      const m = document.getElementById(id);
+      if (!m) return;
+      m.addEventListener('click', (e) => { if (e.target === m) MODAL_CLOSE[id](); });
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape') return;
+      const order = ['export-image-modal', 'mermaid-modal', 'image-modal', 'find-modal', 'url-modal', 'help-modal'];
+      for (const id of order) {
+        const m = document.getElementById(id);
+        if (m && m.style.display !== 'none' && m.classList.contains('show')) {
+          MODAL_CLOSE[id]();
+          e.preventDefault();
+          break;
+        }
+      }
+    });
+
     // 启动
     init();
   </script>
