@@ -64,9 +64,10 @@ npm run tauri dev
 
 ```
 app/
-├── index.html            # 改造后的前端主文档（仅新增约 30 行 Tauri 桥接）
-├── i18n.js               # 多语言（zh-CN 新增 3 个 toast key）
-├── vendor/               # 本地化第三方库（marked/katex/mermaid/dom-to-image-more）
+├── web/                  # 前端静态资源（frontendDist，已与 src-tauri/node_modules 物理隔离）
+│   ├── index.html        # 改造后的前端主文档（仅新增约 30 行 Tauri 桥接）
+│   ├── i18n.js           # 多语言（zh-CN 新增 3 个 toast key）
+│   └── vendor/           # 本地化第三方库（marked/katex/mermaid/dom-to-image-more）
 ├── src-tauri/            # Rust 端：命令 + 文件关联 + 打包配置
 │   ├── src/main.rs
 │   ├── tauri.conf.json

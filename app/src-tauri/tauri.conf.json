@@ -4,9 +4,9 @@
   "version": "1.0.0",
   "identifier": "com.md-editor.app",
   "build": {
-    "frontendDist": "../",
+    "frontendDist": "../web",
     "devUrl": "http://localhost:5173",
-    "beforeDevCommand": "npx vite --port 5173 --strictPort",
+    "beforeDevCommand": "npx vite web --port 5173 --strictPort",
     "beforeBuildCommand": ""
   },
   "app": {
