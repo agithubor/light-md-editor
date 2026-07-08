@@ -36,9 +36,9 @@ jobs:
         with:
           workspaces: 'app/src-tauri -> target'
 
-      - name: Install NSIS
-        # GitHub Windows runner 可能未预装 NSIS，用 winget 装（Tauri 的 NSIS bundler 需要 makensis）
-        run: winget install --exact --id Nullsoft.NSIS --accept-package-agreements --accept-source-agreements --silent
+      # 注意：不要手动装系统 NSIS。
+      # Tauri v2 在打包时会自动下载自带的 makensis 与 nsis_tauri_utils 插件，
+      # 系统 NSIS 不仅不需要，且 winget 在 CI 上常返回非 0 导致 job 失败。
 
       - name: Install frontend dependencies
         run: npm install
