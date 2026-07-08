@@ -1,0 +1,38 @@
+classDiagram
+    class EditorBridge {
+        <<frontend global>>
+        +String currentFilePath
+        +init() void
+        +autoSave() void
+        +saveToLocal() void
+        +loadFileFromPath(path) void
+        +basename(path) String
+        +listenOpenFile() void
+    }
+    class TauriFrontendAPI {
+        <<window.__TAURI__>>
+        +invoke(cmd, args) Promise
+        +listen(event, cb) Promise~UnlistenFn~
+    }
+    class MarkdownCommands {
+        <<rust #[tauri::command]>>
+        +read_markdown(path) Result~String,String~
+        +write_markdown(path, content) Result~(),String~
+        +get_startup_file_path() Option~String~
+        +get_app_version() String
+    }
+    class StartupState {
+        <<managed state>>
+        -Mutex~Option~String~~ path
+    }
+    class FileAssociationPlugins {
+        <<plugins>>
+        +single_instance(on_second_instance)
+        +deep_link(on_open_url)
+    }
+
+    EditorBridge ..> TauriFrontendAPI : 使用 invoke / listen
+    TauriFrontendAPI ..> MarkdownCommands : IPC 调用
+    MarkdownCommands ..> StartupState : 读取启动路径
+    FileAssociationPlugins ..> EditorBridge : emit "open-file" 事件
+    FileAssociationPlugins ..> MarkdownCommands : 间接触发 read_markdown

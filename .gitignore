@@ -1,0 +1,18 @@
+# ===== WorkBuddy 内部记忆（含对话日志，勿提交、勿公开）=====
+.workbuddy/
+
+# ===== 系统/编辑器垃圾文件 =====
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# ===== 依赖与构建产物（app/ 下另有 .gitignore 兜底）=====
+node_modules/
+src-tauri/target/
+src-tauri/gen/
+dist/
+
+# ===== 日志 =====
+*.log

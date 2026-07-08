@@ -1,0 +1,38 @@
+sequenceDiagram
+    participant OS as Windows 资源管理器
+    participant Proc as app.exe 进程
+    participant Rust as Rust(main.rs)
+    participant FE as 前端 index.html
+
+    OS->>Proc: 双击 a.md → 启动 app.exe "C:/a/file.md"
+
+    alt 首次启动（无运行实例）
+        Proc->>Rust: std::env::args() 含 "C:/a/file.md"
+        Rust->>Rust: 解析并写入 StartupState
+        Rust->>FE: 创建窗口、加载 index.html
+        FE->>Rust: invoke('get_startup_file_path')
+        Rust-->>FE: "C:/a/file.md"
+        FE->>Rust: invoke('read_markdown', {path})
+        Rust->>Rust: fs::read_to_string
+        Rust-->>FE: content
+        FE->>FE: editor.value=content; filenameInput=basename
+    else 已运行实例（再次双击 b.md）
+        OS->>Proc: 新进程 app.exe "C:/b/file.md"
+        Proc->>Rust: single_instance.on_second_instance(args)
+        Rust->>FE: window.emit('open-file', {path:"C:/b/file.md"})
+        FE->>FE: listen('open-file') → loadFileFromPath
+        FE->>Rust: invoke('read_markdown', {path})
+        Rust-->>FE: content
+        FE->>FE: 填充编辑器 + showToast
+    end
+
+    Note over FE,Rust: —— 保存文件 ——
+    FE->>FE: autoSave()/saveToLocal() 触发
+    alt currentFilePath != null（文件模式）
+        FE->>Rust: invoke('write_markdown', {path, content})
+        Rust->>Rust: fs::write(path, content)
+        Rust-->>FE: Ok(())
+        FE->>FE: showSaveHint() + showToast
+    else 无文件模式
+        FE->>FE: localStorage.setItem(STORAGE_KEY, ...)
+    end

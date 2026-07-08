@@ -1,0 +1,55 @@
+name: Build Windows Installer
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'app/**'
+      - '.github/workflows/build.yml'
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    name: Build NSIS installer (Windows)
+    runs-on: windows-latest
+    # 工作目录就是 Tauri 工程根 app/
+    defaults:
+      run:
+        working-directory: app
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust (stable, MSVC target)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: 'app/src-tauri -> target'
+
+      - name: Install NSIS
+        # GitHub Windows runner 可能未预装 NSIS，用 winget 装（Tauri 的 NSIS bundler 需要 makensis）
+        run: winget install --exact --id Nullsoft.NSIS --accept-package-agreements --accept-source-agreements --silent
+
+      - name: Install frontend dependencies
+        run: npm install
+
+      - name: Build Tauri (release + NSIS bundle)
+        run: npm run tauri build
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: md-editor-setup
+          # 产物相对 app/ 目录：app/src-tauri/target/release/bundle/nsis/MD Editor_1.0.0_x64-setup.exe
+          path: src-tauri/target/release/bundle/nsis/*.exe
+          if-no-files-found: error

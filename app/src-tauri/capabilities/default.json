@@ -1,0 +1,14 @@
+{
+  "identifier": "default",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "core:event:default",
+    "core:window:default",
+    "core:app:default",
+    "core:webview:default",
+    "com.md-editor.app:allow-read-markdown",
+    "com.md-editor.app:allow-write-markdown",
+    "com.md-editor.app:allow-get-startup-file-path"
+  ]
+}
