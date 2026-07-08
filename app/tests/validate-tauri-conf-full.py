@@ -85,8 +85,8 @@ def main():
     checks.append(("bundle.targets 含 nsis", "nsis" in targets))
     checks.append(("app.withGlobalTauri === true",
                    config.get("app", {}).get("withGlobalTauri") is True))
-    checks.append(("identifier === com.md-editor.app",
-                   config.get("identifier") == "com.md-editor.app"))
+    checks.append(("identifier === com-md-editor-app",
+                   config.get("identifier") == "com-md-editor-app"))
 
     all_asserts_ok = True
     for name, ok in checks:

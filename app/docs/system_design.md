@@ -468,7 +468,7 @@ graph TD
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "MD Editor",
   "version": "1.0.0",
-  "identifier": "com.md-editor.app",          // capabilities 权限标识前缀用这个
+  "identifier": "com-md-editor-app",          // capabilities 权限标识前缀用这个
   "build": {
     "frontendDist": "../",                      // 相对 src-tauri → app/，含 index.html/i18n.js/vendor
     "devUrl": "http://localhost:5173",
@@ -541,10 +541,10 @@ graph TD
     "core:app:default",
     "core:webview:default",
     // ★ 自定义命令（标识 = identifier:allow-<cmd>）
-    "com.md-editor.app:allow-read-markdown",
-    "com.md-editor.app:allow-write-markdown",
-    "com.md-editor.app:allow-get-startup-file-path"
-    // 可选："com.md-editor.app:allow-get-app-version"
+    "com-md-editor-app:allow-read-markdown",
+    "com-md-editor-app:allow-write-markdown",
+    "com-md-editor-app:allow-get-startup-file-path"
+    // 可选："com-md-editor-app:allow-get-app-version"
   ]
 }
 ```

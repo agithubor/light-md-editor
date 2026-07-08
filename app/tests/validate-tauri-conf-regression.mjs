@@ -57,7 +57,7 @@ check('A5a bundle.targets 含 "nsis"',
 check('A5b bundle.icon 含 9 项且含 icons/icon.ico',
   c.bundle && Array.isArray(c.bundle.icon) && c.bundle.icon.length === 9 && c.bundle.icon.includes('icons/icon.ico'),
   c.bundle && Array.isArray(c.bundle.icon) ? `count=${c.bundle.icon.length}` : 'missing');
-check('A5c identifier === "com.md-editor.app"', c.identifier === 'com.md-editor.app', `value=${c.identifier}`);
+check('A5c identifier === "com-md-editor-app"', c.identifier === 'com-md-editor-app', `value=${c.identifier}`);
 check('A5d app.withGlobalTauri === true', c.app && c.app.withGlobalTauri === true);
 check('A5e app.windows[0].label === "main"',
   c.app && Array.isArray(c.app.windows) && c.app.windows[0] && c.app.windows[0].label === 'main');
