@@ -1,255 +1,120 @@
 <div align="center">
 
-# Markdown Editor
+# 轻量md编辑器 · Lightweight MD Editor
 
-A Markdown writing tool that works right out of the box in your browser.
-**No installation. No account. No subscription. Your words belong to you.**
+一款轻量、免费、本地优先的 Markdown 编辑器。<br>
+**双击任意 `.md` 文件即可打开编辑，保存时直接写回原文件，断网也能用。**
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)[![Pure Frontend](https://img.shields.io/badge/Architecture-Pure%20Frontend-success)](./markdown-editor.html)[![I18N](https://img.shields.io/badge/I18N-10%20Languages-orange)](./i18n.js)
-
-<p align="center">
-  <a href="./README.md" style="display:inline-block;padding:6px 18px;background:#4f46e5;color:#fff;border-radius:6px 0 0 6px;text-decoration:none;font-weight:600;">English</a>  |  <a href="./README.zh.md" style="display:inline-block;padding:6px 18px;background:#f3f4f6;color:#4b5563;border-radius:0 6px 6px 0;text-decoration:none;font-weight:600;">简体中文</a>
-</p>
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)[![Desktop](https://img.shields.io/badge/Architecture-Tauri%20v2-success)](./app)[![I18N](https://img.shields.io/badge/I18N-10%20Languages-orange)](./i18n.js)
 
 </div>
 
-<p align="center">
-  <img src="public/产品海报.png" width="100%" alt="Markdown Editor Main Interface" />
-</p>
+> **English**: A lightweight, local-first Markdown editor. Double-click any `.md` file to open and edit it; saving writes straight back to the original file on disk. Built by wrapping a single-file web editor inside a Tauri v2 desktop shell. See below for details (Chinese primary).
 
 ---
 
-## 🌟 Why This Tool?
+## 📌 项目由来（改自他人作品，特此致谢）
 
-In the age of AI, Markdown should be simple enough.
+本项目的编辑器内核，来自 **冷逸（沃垠AI）** 创作的纯网页版 Markdown 编辑器——一个单文件 HTML 应用（`markdown-editor.html`），原仓库：<https://github.com/woyin2024/lengyi-markdown-editor.git>。
 
-As a Vibe Coding developer obsessed with Prompts, Agents, and Skills, I’ve used too many Markdown tools: some are too heavy, some charge subscriptions, and some sync your content to the cloud without asking. I just wanted to open a browser, type, see the layout, and take it away.
+原版体验已经很好，但它是「网页应用」：保存只存在浏览器 `localStorage`、双击 `.md` 不会用它本身打开、且依赖 CDN 加载第三方库（断网不可用）。
 
-So I built this editor.
+本仓库在**不改动原版编辑逻辑**的前提下，把它封装成了一个 **Tauri v2 桌面程序**，新增了：
 
-It is **just one HTML file**. Double-click to write. Everything is stored locally, and it works offline. It supports nearly all mainstream Agents — Codex, Claude Code, Openclaw, and more. Whether you’re designing an AGENTS.md or a Skill.md, you can do it here.
+- 系统级关联 `.md` / `.markdown`，双击即用本程序打开；
+- 保存时**真实写回磁盘上的原文件**（替代原版的缓存）；
+- 第三方库全部本地化打包，**完全离线可用**；
+- 单实例运行（已开窗口时再双击 `.md` 在当前窗口打开）。
 
-> If you also believe that in the age of AI, Markdown is the first language — welcome to use it, fork it, and star it.
-
----
-
-## ✨ Features
-
-### 🚀 Out-of-the-Box, Minimalist
-
-- Single-file `markdown-editor.html`: double-click to run in the browser.
-- All core styles, structure, and logic are inlined; works offline.
-
-### 🖊️ Complete Markdown Experience
-
-- **Drag-and-drop import**: drop files directly into the window.
-- **Live preview**: write on the left, preview on the right in real time.
-- **Multiple layouts**: edit + preview, edit only, or preview only.
-- **Source mode**: edit raw Markdown directly on the right side.
-- **Draggable split**: adjust the editor/preview ratio; position is remembered.
-
-### 🛠️ Rich Editing Tools
-
-| Feature | Description |
-|---------|-------------|
-| Headings | Quick H1-H6 insertion |
-| Text styles | Bold, italic, underline, strikethrough, superscript, subscript |
-| Lists | Unordered, ordered, and task lists |
-| Quotes & code | Blockquotes, inline code, fenced code blocks |
-| Links & images | URL insertion and local image Base64 embedding |
-| Tables | Visual 8×8 table picker |
-| Find & replace | Find next, replace, replace all |
-
-### 🌐 Multi-Language Support (10 Languages)
-
-Powered by `i18n.js`: **Simplified Chinese, Traditional Chinese, English, Japanese, Korean, Spanish, French, German, Russian, Portuguese**.
-
-Language preference is persisted to `localStorage`.
-
-### 🎨 Dark / Light Theme
-
-- One-click theme switching with automatic persistence.
-- All colors use CSS variables, making customization easy.
-
-### 💾 Local Auto-Save
-
-- Auto-saves content to browser `localStorage` every 500ms.
-- Content, filename, split ratio, collapsed states, theme, and language all survive page refresh.
-
-### 📤 Multi-Format Export
-
-| Format | Description |
-|--------|-------------|
-| `.md` | Raw Markdown file |
-| `.html` | Standalone HTML file |
-| `.doc` | Word document (opens directly in Office) |
-| `.pdf` | Browser print-to-PDF |
-| `.png` | Long-image export with 9:16, 4:5, 3:4, 1:1, 16:9 ratios for social sharing |
-
-### ⌨️ Shortcuts
-
-| Shortcut | Action |
-|----------|--------|
-| `Ctrl + S` | Save |
-| `Ctrl + Z` | Undo |
-| `Ctrl + Y` / `Ctrl + Shift + Z` | Redo |
-| `Ctrl + B` | Bold |
-| `Ctrl + I` | Italic |
-| `Ctrl + U` | Underline |
-| `Ctrl + K` | Insert link |
-| `Ctrl + Shift + K` | Insert image |
-| `Ctrl + F` | Find & replace |
-| `Tab` | Insert 4-space indent |
+原有界面、快捷键、多语言、导出等能力**全部保留**。原作品基于 MIT 协议开源，本仓库沿用同一协议。
 
 ---
 
-## 🛠️ Technical Architecture
+## ✨ 功能特性
 
-### Stack
+### 🖥️ 桌面增强（本仓库新增）
+- **自动关联 `.md` / `.markdown`**：安装后双击 Markdown 文件即用本程序打开。
+- **真实磁盘读写**：保存直接写回原文件路径，不再只是浏览器缓存。
+- **完全离线**：marked / KaTeX / Mermaid / dom-to-image-more 已本地化（`app/vendor/`），无网也能预览公式与图表。
+- **单实例**：已运行时再双击 `.md` 会在当前窗口打开，不重复启动。
 
-- **Pure native frontend**: HTML5 + CSS3 + Vanilla JavaScript, no framework.
-- **Markdown rendering**: `marked.js`
-- **Math**: `KaTeX` (`$...$` inline, `$$...$$` block)
-- **Diagrams**: `Mermaid 10` (mind maps and flowcharts)
-- **Image export**: `dom-to-image-more`
-- **Local proxy**: `Python 3` + `http.server` (optional, for webpage-to-Markdown)
-
-### Core Design
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    markdown-editor.html                      │
-│  ┌──────────────┐         ┌──────────────┐                  │
-│  │  Editor      │  sync   │  Preview     │                  │
-│  │  (textarea)  │ ──────▶ │  (marked.js) │                  │
-│  └──────────────┘         └──────────────┘                  │
-│         │                         │                         │
-│         ▼                         ▼                         │
-│   localStorage               KaTeX / Mermaid               │
-│         │                         │                         │
-│         ▼                         ▼                         │
-│   auto-save / state restore  formula / diagram render      │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-                   web-to-md-proxy.py (optional)
-                    web fetching + anti-bot bypass
-```
+### 📝 继承自原版的完整编辑体验
+- 实时预览、双栏 / 单栏 / 纯预览、源码模式、可拖拽分栏（比例记忆）
+- 丰富编辑工具：标题、加粗 / 斜体 / 下划线 / 删除线 / 上下标、列表、引用、代码、链接图片、表格、查找替换
+- 10 种语言界面：简 / 繁中、English、日本語、한국어、Español、Français、Deutsch、Русский、Português（偏好记忆）
+- 深色 / 浅色主题，一键切换并自动保存
+- 多格式导出：`.md` / `.html` / `.doc` / `.pdf` / `.png`
+- 完整快捷键：`Ctrl+S` 保存、`Ctrl+B` 加粗、`Ctrl+I` 斜体、`Ctrl+F` 查找替换等
 
 ---
 
-## 📁 Project Structure
+## 🛠️ 技术架构
+
+- **桌面框架**：Tauri v2（Windows 端复用系统 WebView2，安装包仅数 MB）
+- **前端**：原版 `markdown-editor.html`（HTML5 + CSS3 + 原生 JS，无框架），仅新增约 30 行 Tauri 桥接（`app/index.html`）
+- **桥接**：Rust 暴露 `read_markdown` / `write_markdown` / `get_startup_file_path` 命令；前端通过 `window.__TAURI__` 调用；双击 `.md` 经「命令行参数 + 单实例」链路载入
+- **原有依赖**：`marked.js`（渲染）、`KaTeX`（公式）、`Mermaid 10`（图表）、`dom-to-image-more`（图片导出）
+
+---
+
+## 📁 项目结构
 
 ```
 .
-├── markdown-editor.html    # Main editor (single-file app)
-├── i18n.js                 # i18n dictionary (10 languages)
-├── web-to-md-proxy.py      # Optional local proxy script
-├── public/                 # Static assets
-│   ├── 关于作者.md
-│   ├── 产品海报.png
-│   └── 产品界面.png
-└── README.md               # This file
+├── markdown-editor.html    # 原版网页编辑器（单文件，来自 冷逸 / 沃垠AI）
+├── i18n.js                 # 多语言字典（10 种语言，来自原版）
+├── web-to-md-proxy.py      # 本地代理脚本（可选，来自原版）
+├── app/                    # Tauri 桌面封装工程（本仓库新增）
+│   ├── index.html          # 改造后的前端入口（桥接真实文件读写）
+│   ├── i18n.js             # 复制并新增 3 个提示词
+│   ├── vendor/             # 本地化第三方库（离线）
+│   └── src-tauri/          # Rust 源码 / 配置 / 图标
+├── .github/workflows/      # GitHub Actions 云端构建
+└── README.md               # 本文件
 ```
 
 ---
 
-## 🚀 Quick Start
+## 🚀 快速开始（普通用户）
 
-### Option 1: Open Directly
+1. 到本仓库 **Releases** 或 **Actions → Artifacts** 下载 `MD Editor_x.x.x_x64-setup.exe`；
+2. 安装后，双击任意 `.md` 文件即可用本程序编辑；
+3. 编辑后保存（`Ctrl+S` 或自动保存）会直接写回原文件。
+
+> ⚠️ 安装包**未签名**，Windows SmartScreen 可能拦截，点「更多信息 → 仍要运行」即可（自用无碍）。
+
+---
+
+## 🔧 从源码构建
+
+### 方式一：GitHub Actions（推荐，本机零依赖）
+推送到 `main` / `master` 后，`windows-latest` runner 自动编译并产出 NSIS 安装包，到 Actions 页面下载 Artifact 即可（本机无需安装 Rust / VS / NSIS）。
+
+### 方式二：本机构建
+需 Windows + Rust (MSVC 目标) + Node 22 + NSIS（或 VS Build Tools 2022「使用 C++ 的桌面开发」）：
 
 ```bash
-# Clone the repo
-git clone https://github.com/woyin2024/lengyi-markdown-editor.git
-
-# Double-click to open
-markdown-editor.html
+cd app
+npm install
+npm run tauri build
 ```
 
-### Option 2: Local Server (Recommended)
-
-```bash
-cd markdown-editor
-
-# Python 3
-python -m http.server 8080
-
-# Or Node.js
-npx serve .
-
-# Open in browser
-open http://localhost:8080/markdown-editor.html
-```
-
-### Option 3: Use the Local Proxy (Webpage to Markdown)
-
-```bash
-# Install requests (optional, recommended)
-pip install requests
-
-# Start the proxy
-python web-to-md-proxy.py
-
-# Default port 8765
-# Check "Use local proxy" in the editor
-```
+产物位于：`app/src-tauri/target/release/bundle/nsis/MD Editor_1.0.0_x64-setup.exe`
 
 ---
 
-## 🖼️ Screenshots
+## 📜 开源协议与致谢
 
-<p align="center">
-  <img src="public/产品界面2.png" width="48%" />
-  <img src="public/产品界面3-主题切换.png" width="48%" />
-</p>
-
-<p align="center">
-  <img src="public/产品界面-多格式导出.png" width="48%" />
-  <img src="public/产品界面-多语言支持.png" width="48%" />
-</p>
-
----
-
-## 🤝 Contributing
-
-This project started from my own need for a simple writing tool, but I believe it can be better.
-
-New features, bug fixes, UI improvements, language additions, and documentation improvements are all welcome:
-
-1. Fork the repository
-2. Create your feature branch: `git checkout -b feature/AmazingFeature`
-3. Commit your changes: `git commit -m 'Add some AmazingFeature'`
-4. Push to the branch: `git push origin feature/AmazingFeature`
-5. Open a Pull Request
-
----
-
-## 📜 License
-
-This project is licensed under the [MIT License](LICENSE).
-
-You are free to use, modify, and distribute. For commercial use, please obtain authorization. I only hope that one quiet afternoon, when you write something you are truly satisfied with, you might remember where this little tool began.
-
----
-
-## 👤 About the Author
-
-**Leng Yi (冷逸)**, founder of Chinese top AI media "**沃垠AI**", a Vibe Coding developer who can’t really code but loves to dive deep into Prompts, Skills, and Agents.
-
-- **Unified account across platforms**: 沃垠AI
-- **Content matrix**: WeChat Official Account, Xiaohongshu, Zhihu, GitHub, Bilibili, X, etc.
-
-Welcome to follow the WeChat Official Account "沃垠AI" for more AI insights:
-<p align="center">
-  <img src="public/公众号二维码.png" width="90%" alt="WeChat QR Code" />
-</p>
+- 原版编辑器由 **冷逸（沃垠AI）** 创作，基于 [MIT License](LICENSE) 开源，原仓库：<https://github.com/woyin2024/lengyi-markdown-editor.git>
+- 本仓库在其基础上进行桌面化封装，沿用同一 MIT 协议。
+- 感谢原作者的优秀作品，让这个轻量编辑器得以在桌面上延续。
 
 ---
 
 <div align="center">
 
-### If this helps you, please give it a ⭐.
+如果它帮到了你，给个 ⭐ 吧。
 
-**Writing well is what matters most.**
+**写得好，比什么都重要。**
 
 </div>
