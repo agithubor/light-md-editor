@@ -79,7 +79,11 @@
     .app {
       display: flex;
       flex-direction: column;
-      height: 100vh;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
     }
     /* SVG 图标基线对齐 */
     .icon {
@@ -1632,14 +1636,40 @@
 
       let startupPath = null;
       if (TAURI) {
-        try { startupPath = await TAURI.core.invoke('get_startup_file_path'); } catch(e) { startupPath = null; }
+        // Tauri v2 IPC 桥可能需要短暂时间就绪，增加最多 2 次重试
+        for (let attempt = 0; attempt < 3; attempt++) {
+          try {
+            startupPath = await TAURI.core.invoke('get_startup_file_path');
+            break;
+          } catch(e) {
+            console.error('[init] get_startup_file_path 第' + (attempt+1) + '次失败:', e);
+            if (attempt < 2) await new Promise(r => setTimeout(r, 150));
+            else startupPath = null;
+          }
+        }
       }
+      console.log('[init] startupPath:', startupPath);
       if (startupPath) {
         currentFilePath = startupPath;
-        try {
-          const c = await TAURI.core.invoke('read_markdown', { path: startupPath });
-          editor.value = c || '';
-        } catch(e) { editor.value = ''; showToast(t('toastOpenFailed') + ': ' + e); }
+        let loadOk = false;
+        for (let attempt = 0; attempt < 3; attempt++) {
+          try {
+            const c = await TAURI.core.invoke('read_markdown', { path: startupPath });
+            console.log('[init] read_markdown 返回, 长度:', c ? c.length : '(null/empty)');
+            editor.value = c || '';
+            // 如果读到空内容，额外提示
+            if (!c) { console.warn('[init] 文件内容为空:', startupPath); showToast(t('toastOpenFailed') + ': 文件内容为空'); }
+            loadOk = true;
+            break;
+          } catch(e) {
+            console.error('[init] read_markdown 第' + (attempt+1) + '次失败:', e);
+            if (attempt < 2) await new Promise(r => setTimeout(r, 150));
+          }
+        }
+        if (!loadOk) {
+          editor.value = '/* 加载文件失败（已重试 3 次）*/\n\n路径: ' + startupPath + '\n\n请检查：\n1. 文件是否存在\n2. 文件是否被其他程序占用\n3. 尝试通过菜单「导入」按钮打开';
+          showToast(t('toastOpenFailed'));
+        }
         filenameInput.value = basename(startupPath);
       } else {
         const saved = localStorage.getItem(STORAGE_KEY);

@@ -7,7 +7,16 @@ struct StartupState(pub Mutex<Option<String>>);
 
 #[tauri::command]
 fn read_markdown(path: String) -> Result<String, String> {
-    std::fs::read_to_string(&path).map_err(|e| format!("读取文件失败: {}", e))
+    use std::fs;
+    // 先检查文件是否存在且可读，给出更明确的错误信息
+    let metadata = fs::metadata(&path)
+        .map_err(|e| format!("文件不存在或无法访问 '{}': {}", path, e))?;
+    if !metadata.is_file() {
+        return Err(format!("'{}' 不是普通文件", path));
+    }
+    let content = fs::read_to_string(&path)
+        .map_err(|e| format!("读取文件失败 '{}': {} (请检查文件编码是否为 UTF-8)", path, e))?;
+    Ok(content)
 }
 
 #[tauri::command]
@@ -41,10 +50,22 @@ fn emit_open_file(app: &tauri::AppHandle, path: String) {
 }
 
 fn main() {
-    let startup_path = std::env::args()
+    let args: Vec<String> = std::env::args().collect();
+    eprintln!("[md-editor] 原始命令行参数: {:?}", args);
+
+    let startup_path = args
+        .iter()
         .skip(1)
         .find(|a| is_markdown_arg(a))
-        .map(|a| normalize_path(&a));
+        .map(|a| {
+            let normalized = normalize_path(a);
+            eprintln!("[md-editor] 检测到启动文件参数: '{}' -> 标准化后: '{}'", a, normalized);
+            normalized
+        });
+
+    if startup_path.is_none() {
+        eprintln!("[md-editor] 未检测到 .md/.markdown 启动参数");
+    }
 
     tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
