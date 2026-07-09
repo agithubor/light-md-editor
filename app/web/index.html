@@ -102,15 +102,24 @@
     /* 顶部栏 */
     .top-bar {
       display: flex;
-      align-items: center;
-      gap: 10px;
+      align-items: flex-start;
+      gap: 0;
       padding: 8px 14px;
       background: var(--panel-bg);
       border-bottom: 1px solid var(--border);
       box-shadow: var(--shadow-sm);
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
       z-index: 10;
       user-select: none;
+    }
+    /* 包裹品牌/文件名/操作按钮，允许内部换行；窗口控制按钮始终固定在右上角 */
+    .top-bar-main {
+      flex: 1 1 auto;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
     }
     /* 无边框模式下的窗口控制按钮 */
     .window-controls {
@@ -118,6 +127,8 @@
       align-items: center;
       gap: 2px;
       margin-left: 8px;
+      flex: 0 0 auto;
+      align-self: flex-start;
     }
     .wc-btn {
       width: 34px;
@@ -1076,6 +1087,7 @@
   </svg>
   <div class="app">
     <div class="top-bar">
+      <div class="top-bar-main">
       <span class="brand" data-tauri-drag-region data-i18n="brand">Markdown编辑器</span>
       <input type="text" id="filename" value="未命名文档.md" data-i18n-title="filenameTitle" title="文件名">
       <div class="spacer" data-tauri-drag-region></div>
@@ -1111,6 +1123,7 @@
             <div class="dropdown-item" onclick="setLanguage('pt'); closeLangMenu();">Português</div>
           </div>
         </div>
+      </div>
       </div>
       <div class="window-controls">
         <button id="win-min" class="wc-btn" title="最小化"><svg viewBox="0 0 10 10" width="10" height="10"><path d="M0 5 H10" stroke="currentColor" stroke-width="1.2"/></svg></button>
@@ -1468,7 +1481,24 @@
         const wmax = document.getElementById('win-max');
         const wclose = document.getElementById('win-close');
         if (wmin) wmin.addEventListener('click', () => w.minimize());
-        if (wmax) wmax.addEventListener('click', () => w.toggleMaximize());
+        if (wmax) {
+          const setMaxIcon = async () => {
+            let max = false;
+            try { max = await w.isMaximized(); } catch (e) {}
+            wmax.innerHTML = max
+              ? '<svg viewBox="0 0 10 10" width="10" height="10"><path d="M1.5 3 H8.5 V8.5 H1.5 Z M3 1 H7 V3" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>'
+              : '<svg viewBox="0 0 10 10" width="10" height="10"><path d="M0 0 H10 V10 H0 Z" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>';
+            wmax.title = max ? '还原' : '最大化';
+          };
+          wmax.addEventListener('click', async () => {
+            try {
+              if (await w.isMaximized()) await w.unmaximize();
+              else await w.maximize();
+            } catch (e) { console.error('[window] 最大化/还原失败:', e); }
+          });
+          setMaxIcon();
+          try { w.onResized(() => setMaxIcon()); } catch (e) {}
+        }
         if (wclose) wclose.addEventListener('click', () => w.close());
       } catch (e) { console.error('[window] 控制按钮绑定失败:', e); }
     }
