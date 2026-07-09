@@ -15,6 +15,7 @@
       {
         "label": "main",
         "title": "MD Editor",
+        "decorations": false,
         "width": 1100,
         "height": 720,
         "resizable": true,

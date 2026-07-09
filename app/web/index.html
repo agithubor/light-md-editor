@@ -110,7 +110,30 @@
       box-shadow: var(--shadow-sm);
       flex-wrap: wrap;
       z-index: 10;
+      user-select: none;
     }
+    /* 无边框模式下的窗口控制按钮 */
+    .window-controls {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      margin-left: 8px;
+    }
+    .wc-btn {
+      width: 34px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      background: transparent;
+      color: var(--text);
+      cursor: pointer;
+      border-radius: 6px;
+      transition: background .15s ease;
+    }
+    .wc-btn:hover { background: var(--border); }
+    .wc-close:hover { background: #e81123; color: #fff; }
     .top-bar .brand {
       font-weight: 700;
       font-size: 16px;
@@ -1053,9 +1076,9 @@
   </svg>
   <div class="app">
     <div class="top-bar">
-      <span class="brand" data-i18n="brand">Markdown编辑器</span>
+      <span class="brand" data-tauri-drag-region data-i18n="brand">Markdown编辑器</span>
       <input type="text" id="filename" value="未命名文档.md" data-i18n-title="filenameTitle" title="文件名">
-      <div class="spacer"></div>
+      <div class="spacer" data-tauri-drag-region></div>
       <div class="top-actions">
         <button onclick="saveToLocal()" class="primary" data-i18n-title="save"><svg class="icon"><use href="#icon-save"></use></svg> <span data-i18n="save">保存</span></button>
         <label for="importFile"><svg class="icon"><use href="#icon-upload"></use></svg> <span data-i18n="importBtn">导入</span></label>
@@ -1088,6 +1111,11 @@
             <div class="dropdown-item" onclick="setLanguage('pt'); closeLangMenu();">Português</div>
           </div>
         </div>
+      </div>
+      <div class="window-controls">
+        <button id="win-min" class="wc-btn" title="最小化"><svg viewBox="0 0 10 10" width="10" height="10"><path d="M0 5 H10" stroke="currentColor" stroke-width="1.2"/></svg></button>
+        <button id="win-max" class="wc-btn" title="最大化"><svg viewBox="0 0 10 10" width="10" height="10"><path d="M0 0 H10 V10 H0 Z" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></button>
+        <button id="win-close" class="wc-btn wc-close" title="关闭"><svg viewBox="0 0 10 10" width="10" height="10"><path d="M1 1 L9 9 M9 1 L1 9" stroke="currentColor" stroke-width="1.2"/></svg></button>
       </div>
     </div>
 
@@ -1417,6 +1445,9 @@
     // ===== Tauri 桥接（自动关联 .md / 真实读写文件）=====
     const TAURI = window.__TAURI__ || null;
     let currentFilePath = null; // null=无文件模式(存localStorage)；string=已打开文件绝对路径
+    // 调试用全局变量（Ctrl+Shift+D 面板读取）
+    window.__LAST_STARTUP__ = 'n/a';
+    window.__LAST_ERR__ = null;
     function basename(p){ return (p || '').split(/[\\/]/).pop(); }
     async function loadFileFromPath(p){
       try{
@@ -1426,11 +1457,43 @@
         filenameInput.value = basename(p);
         updatePreview(); updateCount();
         showToast(t('toastFileOpened'));
-      }catch(e){ showToast(t('toastOpenFailed') + ': ' + e); }
+      }catch(e){ window.__LAST_ERR__ = String(e); showToast(t('toastOpenFailed') + ': ' + e); }
     }
     if (TAURI) {
       TAURI.event.listen('open-file', (ev) => loadFileFromPath(ev.payload.path));
+      // 无边框模式下的窗口控制按钮
+      try {
+        const w = TAURI.window.getCurrentWindow();
+        const wmin = document.getElementById('win-min');
+        const wmax = document.getElementById('win-max');
+        const wclose = document.getElementById('win-close');
+        if (wmin) wmin.addEventListener('click', () => w.minimize());
+        if (wmax) wmax.addEventListener('click', () => w.toggleMaximize());
+        if (wclose) wclose.addEventListener('click', () => w.close());
+      } catch (e) { console.error('[window] 控制按钮绑定失败:', e); }
     }
+    // 调试面板：Ctrl+Shift+D 切换，显示 Tauri 状态 / 启动路径 / 最后错误
+    (function () {
+      let panel = null, visible = false;
+      document.addEventListener('keydown', (e) => {
+        if (e.ctrlKey && e.shiftKey && (e.key === 'D' || e.key === 'd')) {
+          e.preventDefault();
+          visible = !visible;
+          if (!panel) {
+            panel = document.createElement('div');
+            panel.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:99999;background:rgba(15,23,42,.92);color:#4ade80;font:12px/1.5 ui-monospace,Menlo,Consolas,monospace;padding:8px 10px;border-radius:6px;max-width:64vw;white-space:pre-wrap;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.35);';
+            document.body.appendChild(panel);
+          }
+          panel.style.display = visible ? 'block' : 'none';
+          if (visible) {
+            panel.textContent =
+              'TAURI: ' + (window.__TAURI__ ? 'yes' : 'no') + '\n' +
+              'startup_path: ' + window.__LAST_STARTUP__ + '\n' +
+              'lastErr: ' + (window.__LAST_ERR__ || 'none');
+          }
+        }
+      });
+    })();
 
     let previewMode = 'preview';
     let currentLang = 'zh-CN';
@@ -1649,6 +1712,7 @@
         }
       }
       console.log('[init] startupPath:', startupPath);
+      window.__LAST_STARTUP__ = startupPath || '(null)';
       if (startupPath) {
         currentFilePath = startupPath;
         let loadOk = false;
@@ -1663,6 +1727,7 @@
             break;
           } catch(e) {
             console.error('[init] read_markdown 第' + (attempt+1) + '次失败:', e);
+            window.__LAST_ERR__ = String(e);
             if (attempt < 2) await new Promise(r => setTimeout(r, 150));
           }
         }
