@@ -1472,9 +1472,22 @@
         showToast(t('toastFileOpened'));
       }catch(e){ window.__LAST_ERR__ = String(e); showToast(t('toastOpenFailed') + ': ' + e); }
     }
-    if (TAURI) {
+    // 等待 Tauri 全局对象就绪后再绑定：内联脚本可能在 window.__TAURI__ 注入前执行，
+    // 届时 if(TAURI) 为 false 会导致三个窗口按钮全部无响应。此处用重试兜底，并对 load 事件做防重复绑定。
+    function bindWindowControls() {
+      if (bindWindowControls._done) return;
+      const TAURI = window.__TAURI__;
+      if (!TAURI || !TAURI.window) {
+        if (bindWindowControls._retries > 0) {
+          bindWindowControls._retries--;
+          setTimeout(bindWindowControls, 60);
+        } else {
+          console.error('[window] Tauri 全局对象不可用，窗口控制按钮未绑定');
+        }
+        return;
+      }
+      bindWindowControls._done = true;
       TAURI.event.listen('open-file', (ev) => loadFileFromPath(ev.payload.path));
-      // 无边框模式下的窗口控制按钮
       try {
         const w = TAURI.window.getCurrentWindow();
         const wmin = document.getElementById('win-min');
@@ -1497,11 +1510,15 @@
             } catch (e) { console.error('[window] 最大化/还原失败:', e); }
           });
           setMaxIcon();
-          try { w.onResized(() => setMaxIcon()); } catch (e) {}
+          try { if (typeof w.onResized === 'function') w.onResized(() => setMaxIcon()); } catch (e) {}
         }
         if (wclose) wclose.addEventListener('click', () => w.close());
       } catch (e) { console.error('[window] 控制按钮绑定失败:', e); }
     }
+    bindWindowControls._retries = 80;
+    bindWindowControls._done = false;
+    bindWindowControls();
+    window.addEventListener('load', bindWindowControls);
     // 调试面板：Ctrl+Shift+D 切换，显示 Tauri 状态 / 启动路径 / 最后错误
     (function () {
       let panel = null, visible = false;
